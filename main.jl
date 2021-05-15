@@ -10,7 +10,7 @@ include("initialConfigurations.jl")
 include("generateParameters.jl")
 
 # system dimensions
-size = 101
+size = 11
 Lx = size
 Ly = size
 # coupling parameters
@@ -25,7 +25,7 @@ Nϕ = 2*N∠
 Nθ = N∠
 # inverse temperature (larger values reject ΔE>0 with high probability)
 β = 1e6
-# how many Metropolis steps?
+# how many Metropolis steps per iteration?
 Nₛ = 1e5
 # pbc or obc?
 bc = "obc"
@@ -53,4 +53,4 @@ end
 p = [heatmap(getindex.(configurations,i),title=L"S_%$i") for i=1:3]
 pE = plot(energy./(Lx*Ly),ylabel=L"\varepsilon_0",xlabel=L"N_s\times10^{%$(Int64(log10(Nₛ)))}",label=false,title="energy density")
 pf = plot(p..., pE, layout=4)
-savefig(pf,"classicalConfiguration.pdf")
+savefig(pf,"classicalConfiguration.png")

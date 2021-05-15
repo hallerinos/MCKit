@@ -11,8 +11,10 @@ function calculateEnergy(configurations, P)
     # vertical neighbor energies
     Etot += sum([H(configurations[x,y],configurations[x,y+1],J,𝐃₂) for x=1:Lx for y=1:Ly-1])
     if bc=="pbc"
+        # horizontal boundary terms
+        Etot += sum([H(configurations[Lx,y],configurations[1,y],J,𝐃₁) for y=1:Ly])
         # vertical boundary terms
-        Etot += sum([H(configurations[Lx,y],configurations[1,y]) for y=1:Ly])
+        Etot += sum([H(configurations[x,Ly],configurations[x,1],J,𝐃₂) for x=1:Lx])
     end
     return Etot
 end
