@@ -1,9 +1,10 @@
 function metropolisAlgorithm(configs,P)
-    Nϕ = P["Nϕ"]
-    Nθ = P["Nθ"]
+    Nϕ = Int64(P["Nϕ"])
+    Nθ = Int64(P["Nθ"])
     H = P["H"]
     β = P["β"]
     J = P["J"]
+    𝐁 = P["𝐁"]
     𝐃₁ = P["𝐃₁"]
     𝐃₂ = P["𝐃₂"]
     dϕs = P["dϕs"]
@@ -11,13 +12,15 @@ function metropolisAlgorithm(configs,P)
 
     bc = P["bc"]
 
-    Lx = P["Lx"]
-    Ly = P["Ly"]
+    Lx = Int64(P["Lx"])
+    Ly = Int64(P["Ly"])
 
-    Nₛ = P["Nₛ"]
+    Nₛ = Int64(P["Nₛ"])
 
     cfgs = copy(configs)
     
+    ΔEs = Vector{Float64}(undef, Nₛ)
+    Nₐ = 0
     for s = 1:Nₛ
         # draw the position
         x = rand(1:Lx)
@@ -32,39 +35,39 @@ function metropolisAlgorithm(configs,P)
         newε = 0
         oldε = 0
         if x<Lx
-            newε += H(newS,cfgs[x+1,y],J,𝐃₁)
-            oldε += H(oldS,cfgs[x+1,y],J,𝐃₁)
+            newε += H(newS,cfgs[x+1,y],J,𝐃₁,𝐁)
+            oldε += H(oldS,cfgs[x+1,y],J,𝐃₁,𝐁)
         end
         if x>1
-            newε += H(cfgs[x-1,y],newS,J,𝐃₁)
-            oldε += H(cfgs[x-1,y],oldS,J,𝐃₁)
+            newε += H(cfgs[x-1,y],newS,J,𝐃₁,𝐁)
+            oldε += H(cfgs[x-1,y],oldS,J,𝐃₁,𝐁)
         end
         if y<Ly
-            newε += H(newS,cfgs[x,y+1],J,𝐃₂)
-            oldε += H(oldS,cfgs[x,y+1],J,𝐃₂)
+            newε += H(newS,cfgs[x,y+1],J,𝐃₂,𝐁)
+            oldε += H(oldS,cfgs[x,y+1],J,𝐃₂,𝐁)
         end
         if y>1
-            newε += H(cfgs[x,y-1],newS,J,𝐃₂)
-            oldε += H(cfgs[x,y-1],oldS,J,𝐃₂)
+            newε += H(cfgs[x,y-1],newS,J,𝐃₂,𝐁)
+            oldε += H(cfgs[x,y-1],oldS,J,𝐃₂,𝐁)
         end
         # consider also boundary contributions
         if bc=="pbc"
             if x==1
-                newε += H(cfgs[Lx,y],newS,J,𝐃₁)
-                oldε += H(cfgs[Lx,y],oldS,J,𝐃₁)
+                newε += H(cfgs[Lx,y],newS,J,𝐃₁,𝐁)
+                oldε += H(cfgs[Lx,y],oldS,J,𝐃₁,𝐁)
             end
             if x==Lx
-                newε += H(newS,cfgs[1,y],J,𝐃₁)
-                oldε += H(oldS,cfgs[1,y],J,𝐃₁)
+                newε += H(newS,cfgs[1,y],J,𝐃₁,𝐁)
+                oldε += H(oldS,cfgs[1,y],J,𝐃₁,𝐁)
             end
 
             if y==1
-                newε += H(cfgs[x,Ly],newS,J,𝐃₂)
-                oldε += H(cfgs[x,Ly],oldS,J,𝐃₂)
+                newε += H(cfgs[x,Ly],newS,J,𝐃₂,𝐁)
+                oldε += H(cfgs[x,Ly],oldS,J,𝐃₂,𝐁)
             end
             if y==Lx
-                newε += H(newS,cfgs[x,1],J,𝐃₂)
-                oldε += H(oldS,cfgs[x,1],J,𝐃₂)
+                newε += H(newS,cfgs[x,1],J,𝐃₂,𝐁)
+                oldε += H(oldS,cfgs[x,1],J,𝐃₂,𝐁)
             end
         end
         # compute the energy difference
@@ -76,9 +79,12 @@ function metropolisAlgorithm(configs,P)
             # @info "new configuration rejected"
             newS = oldS
             ΔE = 0
+            Nₐ -= 1
         end
+        ΔEs[s] = ΔE
         cfgs[x,y] = newS
+        Nₐ += 1
     end
 
-    return cfgs
+    return cfgs, ΔEs, Nₐ
 end
