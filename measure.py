@@ -14,7 +14,7 @@ import pandas as pd
 
 # plt.style.use('ggplot')
 
-subdir = "/home/andreas/mckit/results"
+subdir = "./results"
 # pwd_paths = [subdir+"M64",subdir+"M128",subdir+"M256"]
 pwd_paths = [subdir]
 obs_types = ['*']
@@ -53,10 +53,34 @@ for mf in magfields:
         if pp[0] == mf:  # check which snapshots match the magnetic field
             ns += 1
             if ns == 1:
-                tp = datas[idx]  # the first match
+                tp = np.copy(datas[idx])  # the first match
             else:
                 tp += datas[idx]  # add all matches
     local_averages.append(tp/ns)  # divide by the number of matches
 [print(la) for la in local_averages]  # show the estimates
 
+local_averages[0]
+datas[0].iloc[1,3]
+
 correlations = []
+for mf in magfields:
+    ns = 0
+    for (idx, pp) in enumerate(parameters):
+        if pp[0] == mf:  # check which snapshots match the magnetic field
+            ns += 1
+            data = pd.DataFrame([[datas[idx].iloc[jj,1], datas[idx].iloc[jj,2], datas[idx].iloc[jjpr,1], datas[idx].iloc[jjpr,2], datas[idx].iloc[jj,3]*datas[idx].iloc[jjpr,3], datas[idx].iloc[jj,4]*datas[idx].iloc[jjpr,4], datas[idx].iloc[jj,5]*datas[idx].iloc[jjpr,5]] for jj in range(len(datas[idx])) for jjpr in range(len(datas[idx]))], columns=["x", "y", "xpr", "ypr", "S_{x,r}S_{x,rpr}", "S_{y,r}S_{y,rpr}", "S_{z,r}S_{z,rpr}"])
+            if ns == 1:
+                tp = np.copy(data)  # the first match
+            else:
+                tp += data  # add all matches
+    correlations.append(tp/ns)  # divide by the number of matches
+[print(la) for la in correlations]  # show the estimates
+
+corrected_correlations = []
+for (idx, dd) in enumerate(correlations):
+    ns = 0
+    data = pd.DataFrame([[local_averages[idx].iloc[jj,1], local_averages[idx].iloc[jj,2], local_averages[idx].iloc[jjpr,1], local_averages[idx].iloc[jjpr,2], local_averages[idx].iloc[jj,3]*local_averages[idx].iloc[jjpr,3], local_averages[idx].iloc[jj,4]*local_averages[idx].iloc[jjpr,4], local_averages[idx].iloc[jj,5]*local_averages[idx].iloc[jjpr,5]] for jj in range(len(local_averages[idx])) for jjpr in range(len(local_averages[idx]))], columns=["x", "y", "xpr", "ypr", "S_{x,r}S_{x,rpr}", "S_{y,r}S_{y,rpr}", "S_{z,r}S_{z,rpr}"])
+    tp = np.copy(dd)  # the first match
+    tp -= data  # add all matches
+    corrected_correlations.append(tp)  # divide by the number of matches
+[print(la) for la in corrected_correlations]  # show the estimates
